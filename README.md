@@ -1,1 +1,1 @@
-# rps-game
+This is a rock, paper, scissors game that is played in console. 
