@@ -1,102 +1,84 @@
 console.log("Hello World");
 
-function getComputerChoice(){
-    let num = 0;
-    num = Math.random();
-    console.log(num);
-    if(num >= 0 && num < .33){
-        return "rock";
-    }
-    else if(num >= .33 && num < .67){
-        return "paper";
-    }
-    else{
-        return "scissors";
-    }
-
+function getComputerChoice() {
+    let num = Math.random();
+    if (num < 0.33) return "rock";
+    if (num < 0.67) return "paper";
+    return "scissors";
 }
 
 
-function getHumanChoice(){
-    let checked = false;
-    let sign;
-    while(checked === false){
-        sign = prompt("Let's play rock, paper, scissors!");
-        sign = sign.toLowerCase();
+function getHumanChoice() {
+    return new Promise(resolve => {
+        function handleClick(event) {
+            resolve(event.target.textContent.toLowerCase()); // Return choice
+            document.querySelectorAll('.option').forEach(button => {
+                button.removeEventListener('click', handleClick); // Remove listener to avoid duplicates
+            });
+        }
 
-        if(sign === "rock" || sign === "paper" || sign === "scissors")
-            checked = true;
-    }
-    return sign;
+        document.querySelectorAll('.option').forEach(button => {
+            button.addEventListener('click', handleClick, { once: true }); // Ensures each button click is handled only once
+        });
+    });
 }
 
 
 //0 means computer wins, 1 means human wins, 2 means tie
-function playRound(computerParam, humanParam){
-    if(humanParam === "rock"){
-        if(computerParam === "paper")
-            return 0;
-        if(computerParam === "scissors")
-            return 1;
-        if(computerParam === "rock")
-            return 2;
+function playRound(computerParam, humanParam) {
+    if (humanParam === computerParam) return 2; // Tie
+    if (
+        (humanParam === "rock" && computerParam === "scissors") ||
+        (humanParam === "paper" && computerParam === "rock") ||
+        (humanParam === "scissors" && computerParam === "paper")
+    ) {
+        return 1; // Human wins
     }
-    else if (humanParam === "paper"){ 
-        if(computerParam === "scissors")
-            return 0;
-        if(computerParam === "rock")
-            return 1;
-        if(computerParam === "paper")
-            return 2;
-
-    }
-    else if (humanParam === "scissors"){
-        if(computerParam === "rock")
-            return 0;
-        if(computerParam === "paper")
-            return 1;
-        if(computerParam === "scissors")
-            return 2;
-    }
+    return 0; // Computer wins
 }
 
-function playGame(){
-    let computerSelection = "hello";
-    let humanSelection = "hi";
-
-    computerSelection = getComputerChoice();
-    humanSelection = getHumanChoice();
-
+async function playGame() {
     let computerScore = 0;
     let humanScore = 0;
-    let answer = 3;
-    for(let i = 0; i < 5; i++){
-        console.log(computerSelection);
-        console.log(humanSelection);
-        answer = playRound(computerSelection, humanSelection);
+    let round = 0
 
-        if(answer === 0)
+    let resultDiv = document.getElementById("result");
+
+    while (humanScore < 5 && computerScore < 5) {
+        console.log(`Round ${round + 1}`);
+        round++;
+        resultDiv.innerHTML += `<p>Round ${round} - Choose your move!</p>`;
+
+        let computerSelection = getComputerChoice();
+        let humanSelection = await getHumanChoice(); // Wait for user input
+
+        console.log(`Computer: ${computerSelection}`);
+        console.log(`Human: ${humanSelection}`);
+
+        let result = playRound(computerSelection, humanSelection);
+        if (result === 0) {
             computerScore++;
-        if(answer === 1)
+            resultDiv.innerHTML += `<p>Round ${round}: Computer chose ${computerSelection}. You chose ${humanSelection}. <b>Computer wins this round!</b></p>`;
+        } else if (result === 1) {
             humanScore++;
+            resultDiv.innerHTML += `<p>Round ${round}: Computer chose ${computerSelection}. You chose ${humanSelection}. <b>You win this round!</b></p>`;
+        } else {
+            resultDiv.innerHTML += `<p>Round ${round}: Computer chose ${computerSelection}. You chose ${humanSelection}. <b>It's a tie!</b></p>`;
+        }
 
-        console.log("Computer: " + computerScore);
-        console.log("Human: " + humanScore);
-
-        computerSelection = getComputerChoice();
-        humanSelection = getHumanChoice();
+        resultDiv.innerHTML += `<p>Score -> Computer: ${computerScore}, Human: ${humanScore}</p>`;
     }
 
-    if(computerScore < humanScore){
-        console.log("Congrats! You Win!");
-    }
-    else if(computerScore > humanScore){
-        console.log("too bad... you lose");
-    }
-    else{
-        console.log("Tie game.")
-    }
+    console.log(`Final Score - Computer: ${computerScore}, Human: ${humanScore}`);
 
+    if (computerScore > humanScore) {
+        resultDiv.innerHTML += `<h2>Too bad... you lose!</h2>`;
+    } else if (computerScore < humanScore) {
+        resultDiv.innerHTML += `<h2>Congrats! You Win!</h2>`;
+    } else {
+        resultDiv.innerHTML += `<h2>It's a tie game!</h2>`;
+    }
 }
+
 
 playGame();
